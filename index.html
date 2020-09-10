@@ -1,0 +1,89 @@
+
+<html>
+
+<head>
+
+<title>LNMRVF service page</title>
+
+<style>
+.footer {
+position: fixed;
+left: 0;
+bottom: 0;
+width: 100%;
+font-family:Arial;
+text-align: left;
+font-variant:small-caps;
+font-size:small;
+padding:0px 20px 20px 20px; 
+}
+.dark-mode a:link {
+        color:white;
+        text-decoration:none;}
+.dark-mode a:visited {
+        color:white;
+        text-decoration:none;}
+.dark-mode a:hover {
+        color:gray;
+        text-decoration:none;}
+.dark-mode a:active {
+        color:gray;
+        text-decoration:none;}
+.dark-mode{
+background-color: black;
+color: white;
+}
+</style>
+<script>
+function checkNight(){
+	var hash = window.location.hash
+console.log(hash)
+	if (hash=="night") {
+		document.getElementById("nightCB").checked = true;
+		document.body.classList.toggle("dark-mode");
+		}
+}
+function toggleNight(cb){
+	if (cb.checked) {
+		window.location.replace("#night");	
+		document.body.classList.toggle("dark-mode");	
+		}
+	else {
+		window.location.replace("#");	
+		document.body.classList.toggle("dark-mode");	
+}}
+window.onload=checkNight;
+</script>
+<style>
+a:link {
+        color:black;
+        text-decoration:none;}
+a:visited {
+        color:black;
+        text-decoration:none;}
+a:hover {
+        color:gray;
+        text-decoration:none;}
+a:active {
+        color:gray;
+        text-decoration:none;}
+</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<p>&nbsp;</p>
+<h2>Services:</h2>
+<ol style="list-style: none; font-size: 14px; line-height: 32px; font-weight: bold;">
+<li style="clear: both; margin-bottom:5%;"><img style="float: left;" src="./lakeshore336.png" alt="interactive connection" width="105" />&nbsp;&nbsp;&nbsp;
+<a href="./Lakeshore336/">Lakeshore 336 temperaure monitor (magnet) - live status</a></li>
+<li style="clear: both; margin-bottom:5%"><img style="float: left;" src="./lakeshore332.png" alt="interactive connection" width="105" />&nbsp;&nbsp;&nbsp;
+<a href="./Lakeshore332/">Lakeshore 332 temperaure monitor (Janis) - live status</a></li>
+<li style="clear: both;"><img style="float: left;" src="./ILM.png" alt="interactive connection" width="105" />&nbsp;&nbsp;&nbsp;
+<a href="./ILM/">Oxford ILM status monitor</a></li>
+<li style="clear: both;"></li>
+</ol>
+<p><strong>&nbsp;</strong></p>
+<div class="footer"><input type="checkbox" onclick="toggleNight(this);" id="nightCB"><span style='text-align: right'>night mode</span></input></div>
+</body>
+</html>
+

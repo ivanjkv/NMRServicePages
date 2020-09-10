@@ -1,0 +1,152 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="./moment.js"></script>
+    <script type="text/javascript">
+    if (window.location.hash.split('&')[1] == 'night') {
+	var modefg = 'white';
+    	var modebg = 'black';
+    } else {
+	var modefg = 'black';
+	var modebg = 'white';}
+
+    $.get('log.txt', function(data){
+	data = data.split("\r\n");
+	var levels = [['Date','LHe', 'LN2']]
+	for(var i = 0; i < data.length-1; i++){
+		temp = data[i].split("\t")
+		levels.push([new Date(moment(temp[0], "D.M.YYYY HH:mm:ss")), parseFloat(temp[1]), parseFloat(temp[2])])
+		}
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+	function drawChart() {
+		var data = google.visualization.arrayToDataTable(levels);
+		var formatter = new google.visualization.DateFormat({pattern: 'dd/MM/YY HH:mm'});
+		formatter.format(data, 0);
+
+		var options1 = {
+			backgroundColor: modebg,
+			titleTextStyle: {color: modefg},
+			legendTextStyle: {color: modefg},
+			title: 'Cryo liquid levels [%]',
+			legend: 'top',
+			chartArea: {width: '82%', height: '70%'},
+			hAxis: {
+				textStyle: {color: modefg},
+				gridlines: {
+					units: {
+						days: {format: ['dd/MM/YY']},
+						hours: {format: ['HH:mm']},
+					},
+				minorGridlines: {
+						hours: {format: ['HH:mm']},
+						}
+				}
+			},
+			vAxis: {
+				textStyle: {color: modefg}},
+				viewWindowMode: "explicit",
+				viewWindow: {
+					minValue: 0,
+					maxValue: 100,
+					min: 0,
+					max: 100
+			},
+				explorer: {
+					actions: ['dragToZoom', 'rightClickToReset'],
+					maxZoomIn: .01,
+					keepInBounds: true}
+			};
+			
+		var chart = new google.visualization.LineChart(document.getElementById('level_chart'));
+		chart.draw(data, options1);  
+		
+	// let setpdiv = document.createElement('div');
+	// setpdiv.style.fontFamily = 'Arial';
+	// setpdiv.style.marginLeft = '100px';
+	// setpdiv.style.fontSize = 'medium';
+	// setpdiv.style.width = 150;
+	// setpdiv.style.padding = '10px 10px 10px 10px';
+	// setpdiv.style.border = 'thin solid black';
+	// setpdiv.innerHTML = "<b>Setpoint: </b>" + setp + " K";
+	// document.body.append(setpdiv)		
+	}	
+
+    });
+    </script>
+	<style>
+	.footer {
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	font-family:Arial;
+	text-align: left;
+	font-variant:small-caps;
+	font-size:small;
+	padding:0px 20px 20px 20px; 
+	}
+	.dark-mode {
+	background-color: black;
+	color: white;
+	}
+	</style>
+	<script>
+	var reloading;
+	function gethash() {
+		var hash = window.location.hash.split('&')
+		if (hash[0] == undefined) {hash[1]=''} else {hash[0] = hash[0].substring(1)}
+		if (hash[1] == undefined) {hash[1]=''}
+		return hash;}
+
+	function checkReloading() {
+		hash = gethash();
+    		if (hash[0]=="autoreload") {
+        	reloading=setTimeout("window.location.reload();", 60000);
+        	document.getElementById("reloadCB").checked=true;
+		document.getElementById("autorefresh").innerHTML = 'autorefresh:  <span style="color: #007700">ON (1 min)</span>';
+    		}
+		if (hash[1]=="night") {
+			document.getElementById("nightCB").checked = true;
+			document.body.classList.toggle("dark-mode");
+		}
+	}
+
+	function toggleAutoRefresh(cb) {
+		hash = gethash()
+    		if (cb.checked) {
+		window.location.replace("#autoreload\&"+hash[1]);		
+        	reloading=setTimeout("window.location.reload();", 60000);
+		document.getElementById("autorefresh").innerHTML = 'autorefresh:  <span style="color: #007700">ON (1 min)</span>';
+    		} else {
+		window.location.replace("#&"+hash[1])
+        	clearTimeout(reloading);
+		document.getElementById("autorefresh").innerHTML = 'autorefresh:  <span style="color: #bb0000">OFF</span>';
+    		}
+	}
+
+	function toggleNight(cb) {
+		hash = gethash();
+    		if (cb.checked) {
+		window.location.replace("#"+hash[0]+"&night");		
+		window.location.reload();
+    		} else {
+		window.location.replace("#"+hash[0]+"&");
+		window.location.reload()
+    		}
+	}
+
+	window.onload=checkReloading;	
+	</script>	
+	<title> Oxford ILM status monitor </title>
+  </head>
+  <body>
+	<div>
+		<div style="font-family:Arial; font-size:15px; padding: 5px 5px 20px 5px; margin:auto; font-weight: bold">Oxford ILM status monitor</div>
+	    	<div id="level_chart" style="max-width:800px; height: 60%";></div>
+		</div>
+	<div class="footer"><input type="checkbox" onclick="toggleAutoRefresh(this);" id="reloadCB"><span id='autorefresh' style="text-width:200px">autorefresh: <span style="color: #bb0000">OFF</span></span></input>&nbsp;&nbsp;&nbsp;<input type="checkbox" onclick="toggleNight(this);" id="nightCB"><span style='text-align: right'>night mode</span></input></div>
+  </body>
+</html>

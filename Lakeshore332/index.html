@@ -1,0 +1,223 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="./moment.js"></script>
+    <script type="text/javascript">
+    if (window.location.hash.split('&')[1] == 'night') {
+	var modefg = 'white';
+    	var modebg = 'black';
+    } else {
+	var modefg = 'black';
+	var modebg = 'white';}
+
+    $.get('log.txt', function(data){
+	data = data.split("\r\n");
+	const every_nth = (arr, nth) => arr.filter((e, i) => i % nth === nth - 1);
+	data = every_nth(data,5);
+	var temperatures = [['Date','VTI', 'Probe']];
+	var power = [['Date', 'LOW', 'MED', 'HIGH']];
+	var temp;
+	var last_power;
+	var setp;	
+	for(var i = 0; i < data.length-1; i++){
+		temp = data[i].split("\t")
+		temperatures.push([new Date(moment(temp[0], "D.M.YYYY HH:mm:ss")), parseFloat(temp[1]), parseFloat(temp[2])])
+		switch(temp[4]){
+				
+				case "OFF":
+					power.push([new Date(moment(temp[0], "D.M.YYYY HH:mm:ss")), 0,0,0])
+					break;
+				case "LOW":
+					power.push([new Date(moment(temp[0], "D.M.YYYY HH:mm:ss")), parseFloat(temp[5]), 0, 0])
+					break;
+				case "MED":
+					power.push([new Date(moment(temp[0], "D.M.YYYY HH:mm:ss")), 0, parseFloat(temp[5]), 0])
+					break;
+				case "HIGH":
+					power.push([new Date(moment(temp[0], "D.M.YYYY HH:mm:ss")), 0, 0, parseFloat(temp[5])])
+					break;
+			}
+		last_power = temp[4]+' '+parseFloat(temp[5]).toFixed(1)+'%' 
+		setp = parseFloat(temp[3]);
+	}
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart1);
+	google.charts.setOnLoadCallback(drawChart2);
+	function drawChart1() {
+		var data1 = google.visualization.arrayToDataTable(temperatures);
+		var formatter = new google.visualization.DateFormat({pattern: 'dd/MM/YY HH:mm'});
+		formatter.format(data1, 0);
+
+		var options1 = {
+			backgroundColor: modebg,
+			titleTextStyle: {color: modefg},
+			legendTextStyle: {color: modefg},
+			title: 'Temperature',
+			legend: 'top',
+			chartArea: {width: '82%', height: '70%'},
+			hAxis: {
+				textStyle: {color: modefg},
+				gridlines: {
+					units: {
+						days: {format: ['dd/MM/YY']},
+						hours: {format: ['HH:mm']},
+					},
+				minorGridlines: {
+						hours: {format: ['HH:mm']},
+						}
+				}
+			},
+			vAxis: {textStyle: {color: modefg}},
+			explorer: {
+				actions: ['dragToZoom', 'rightClickToReset'],
+				maxZoomIn: .01,
+				keepInBounds: true}
+			};
+			
+		var chart1 = new google.visualization.LineChart(document.getElementById('temperature_chart'));
+		chart1.draw(data1, options1);  
+		
+	// let setpdiv = document.createElement('div');
+	// setpdiv.style.fontFamily = 'Arial';
+	// setpdiv.style.marginLeft = '100px';
+	// setpdiv.style.fontSize = 'medium';
+	// setpdiv.style.width = 150;
+	// setpdiv.style.padding = '10px 10px 10px 10px';
+	// setpdiv.style.border = 'thin solid black';
+	// setpdiv.innerHTML = "<b>Setpoint: </b>" + setp + " K";
+	// document.body.append(setpdiv)		
+	document.getElementById("setpoint").innerHTML = "<b>Setpoint: </b>" + setp + " K";	
+	}
+	
+	
+    function drawChart2() {
+        
+		var data2 = google.visualization.arrayToDataTable(power);
+		var formatter = new google.visualization.DateFormat({pattern: 'dd/MM/YY HH:mm'});
+		formatter.format(data2, 0)
+		var options2 = {
+			backgroundColor: modebg,
+			titleTextStyle:{color: modefg},
+			legendTextStyle:{color: modefg},
+			title: `Heater Power (${last_power})`,
+			legend: 'top',
+			chartArea: {width: '82%', height: '70%'},
+			series: {
+				0: {color: "green"},
+				1: {color: "gold"},
+				2: {color: "red"}
+			},
+			hAxis: {
+				textStyle: {color: modefg},
+				gridlines: {
+					units: {
+						days: {format: ['dd/MM/YY']},
+						hours: {format: ['HH:mm']},
+					}
+				},
+				minorGridlines: {
+					units: {
+						hours: {format: ['HH:mm']},
+					}
+				}
+			},
+			vAxis: {
+				textStyle: {color: modefg},
+				scaleType: 'log',
+				viewWindow: {
+				min: 0.1,
+				max: 100
+				}
+			},
+			explorer: {
+				actions: ['dragToZoom', 'rightClickToReset'],
+				maxZoomIn: .01,
+				keepInBounds: true
+				}
+			};
+
+	var chart2 = new google.visualization.LineChart(document.getElementById('power_chart'));  
+	chart2.draw(data2, options2);
+	
+
+    }
+    });
+    </script>
+	<style>
+	.footer {
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	font-family:Arial;
+	text-align: left;
+	font-variant:small-caps;
+	font-size:small;
+	padding:0px 20px 20px 20px; 
+	}
+	.dark-mode {
+	background-color: black;
+	color: white;
+	}
+	</style>
+	<script>
+	var reloading;
+	function gethash() {
+		var hash = window.location.hash.split('&')
+		if (hash[0] == undefined) {hash[1]=''} else {hash[0] = hash[0].substring(1)}
+		if (hash[1] == undefined) {hash[1]=''}
+		return hash;}
+
+	function checkReloading() {
+		hash = gethash();
+    		if (hash[0]=="autoreload") {
+        	reloading=setTimeout("window.location.reload();", 60000);
+        	document.getElementById("reloadCB").checked=true;
+		document.getElementById("autorefresh").innerHTML = 'autorefresh:  <span style="color: #007700">ON (1 min)</span>';
+    		}
+		if (hash[1]=="night") {
+			document.getElementById("nightCB").checked = true;
+			document.body.classList.toggle("dark-mode");
+		}
+	}
+
+	function toggleAutoRefresh(cb) {
+		hash = gethash()
+    		if (cb.checked) {
+		window.location.replace("#autoreload\&"+hash[1]);		
+        	reloading=setTimeout("window.location.reload();", 60000);
+		document.getElementById("autorefresh").innerHTML = 'autorefresh:  <span style="color: #007700">ON (1 min)</span>';
+    		} else {
+		window.location.replace("#&"+hash[1])
+        	clearTimeout(reloading);
+		document.getElementById("autorefresh").innerHTML = 'autorefresh:  <span style="color: #bb0000">OFF</span>';
+    		}
+	}
+
+	function toggleNight(cb) {
+		hash = gethash();
+    		if (cb.checked) {
+		window.location.replace("#"+hash[0]+"&night");		
+		window.location.reload();
+    		} else {
+		window.location.replace("#"+hash[0]+"&");
+		window.location.reload()
+    		}
+	}
+
+	window.onload=checkReloading;	
+	</script>	
+	<title> Lakeshore 332 temperature monitor </title>
+  </head>
+  <body>
+	<div>
+		<div style="font-family:Arial; font-size:15px; padding: 5px 5px 20px 5px; margin:auto; font-weight: bold">Lakeshore 332 temperature controller (Janis)</div>
+		<div id="setpoint" style="font-family:Arial; padding:5px 5px 5px 5px; font-size:15px; border:thin solid black; width:150px">... loading data ...</div>
+	    	<div id="temperature_chart" style="max-width:800px; height: 60%";></div>
+		<div id="power_chart" style="max-width: 800px; max-height: 40%;"></div>
+	</div>
+	<div class="footer"><input type="checkbox" onclick="toggleAutoRefresh(this);" id="reloadCB"><span id='autorefresh' style="text-width:200px">autorefresh: <span style="color: #bb0000">OFF</span></span></input>&nbsp;&nbsp;&nbsp;<input type="checkbox" onclick="toggleNight(this);" id="nightCB"><span style='text-align: right'>night mode</span></input></div>
+  </body>
+</html>
